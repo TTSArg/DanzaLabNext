@@ -1,0 +1,4 @@
+import Link from "next/link";
+import { PageIntro } from "../components/site";
+
+export default function EnsayaPage() { return <main className="page"><div className="inner"><PageIntro label="Herramienta" title="App Ensaya" /><div className="split"><div><p>Encontrar un espacio de ensayo en Buenos Aires no debería ser un obstáculo para que la danza ocurra.</p><p>App Ensaya centraliza los espacios disponibles en CABA: horarios, precios, características y disponibilidad en una sola plataforma.</p><div className="button-row"><Link className="btn-outline" href="/ensaya/salas">Explorar salas</Link><a className="btn" href="https://wa.me/54000000000">Quiero ser notificado</a></div></div><aside className="panel"><span className="panel-mark">⌂</span><div className="panel-word">Próximamente</div><p>Espacios de ensayo en CABA</p><p>📍 Búsqueda por zona y disponibilidad<br />💰 Precios comparables<br />📅 Reserva directa</p></aside></div></div></main>; }

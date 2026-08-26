@@ -1,0 +1,5 @@
+import { PageIntro } from "../components/site";
+
+const news = [["Laboratorio · Próximo", "Entrenamiento para la Improvisación", "Investigación sobre el motor del movimiento. Grupo abierto, nivel exploratorio."], ["Seminario · Próximo", "Ternura y Contacto", "Seminario intensivo de 4 horas. Exploración de lo sensitivo y lo humano."], ["Composición Escénica · En desarrollo", "Paisajes — Proceso Grupal", "Proceso de creación colectiva orientado a la puesta en escena. Convocatoria abierta."]];
+
+export default function NovedadesPage() { return <main className="page"><div className="inner"><PageIntro label="Agenda · Eventos · Obras" title="Novedades" description="Laboratorios abiertos, obras en escena, seminarios y todo lo que Danza Lab está poniendo en movimiento." /><div className="grid">{news.map(([type, title, text]) => <article className="card" key={title}><div className="nov-type">{type}</div><h3>{title}</h3><p>{text}</p><p>Buenos Aires · Fecha por confirmar</p></article>)}</div><div className="button-row"><a className="btn" href="https://wa.me/54000000000">Consultar disponibilidad</a></div></div></main>; }
