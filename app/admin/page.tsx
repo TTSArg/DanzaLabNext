@@ -256,12 +256,12 @@ export default function AdminPage() {
         <div className="admin-card admin-card--login">
           <div className="inner-label">Danza Lab · Administración</div>
           <h1>Ingresar</h1>
-          <form onSubmit={handleSignIn} className="admin-form">
+          <form onSubmit={handleSignIn} className="admin-form" autoComplete="off">
             <label>Email
-              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+              <input type="email" name="admin-login-email" autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} required />
             </label>
             <label>Contraseña
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+              <input type="password" name="admin-login-password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
             </label>
             {error && <p className="admin-error">{error}</p>}
             <button className="btn" type="submit" disabled={authLoading}>
