@@ -123,4 +123,373 @@ p { color: #aaa; }
 footer { padding: 2.5rem 2rem; background: #0a0a0a; border-top: 1px solid rgba(255,140,66,.08); text-align: center; }
 .flogo { margin-bottom: .4rem; color: var(--fire); font-size: 1.1rem; font-weight: 800; letter-spacing: 5px; }
 .ffrase { color: #555; font-style: italic; }
-@media (max-width: 768px) { .nav-top { padding: .8rem 1.2rem .3rem; } .nav-tabs { justify-content: flex-start; } .nav-tabs a { padding: .55rem .9rem; font-size: .6rem; } .split, .ensaya-wrap { grid-template-columns: 1fr; gap: 2rem; } }
+.ensaya-publish-form {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid rgba(255,140,66,.12);
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+
+.ensaya-publish-form__card {
+  padding: 2rem 1.5rem 2.5rem;
+}
+
+.ensaya-publish-form .eyebrow {
+  font-size: .7rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--fire);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.ensaya-publish-form h1 {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #f4f4f4 30%, var(--fire) 75%, var(--gold) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ensaya-publish-form .sub {
+  text-align: center;
+  color: #ccc;
+  font-size: .92rem;
+  max-width: 50ch;
+  margin: 1rem auto 2.4rem;
+}
+
+.ensaya-publish-form .section-title {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--fire);
+  font-weight: 700;
+  margin: 1.6rem 0 .8rem;
+}
+
+.ensaya-publish-form .section-title:first-child {
+  margin-top: 0;
+}
+
+.ensaya-publish-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ensaya-publish-form .form-row > div {
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .ensaya-publish-form .form-row { grid-template-columns: 1fr; }
+}
+
+.ensaya-publish-form label {
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #9a9a9a;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ensaya-publish-form input,
+.ensaya-publish-form select,
+.ensaya-publish-form textarea {
+  width: 100%;
+  background: #141614;
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  border-radius: 2px;
+  padding: 10px;
+  font-size: .85rem;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.ensaya-publish-form textarea {
+  min-height: 56px;
+  resize: vertical;
+}
+
+.ensaya-publish-form input:focus,
+.ensaya-publish-form select:focus,
+.ensaya-publish-form textarea:focus {
+  outline: 1px solid var(--fire);
+}
+
+.ensaya-publish-form .check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ensaya-publish-form .check-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .75rem;
+  color: #9a9a9a;
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 6px 10px;
+  border-radius: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.ensaya-publish-form .check-item input {
+  width: auto;
+  margin: 0;
+}
+
+.ensaya-publish-form .radio-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ensaya-publish-form .radio-opt {
+  flex: 1;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 2px;
+  padding: 9px;
+  text-align: center;
+  font-size: .78rem;
+  color: #9a9a9a;
+  cursor: pointer;
+}
+
+.ensaya-publish-form .radio-opt.selected {
+  background: var(--fire);
+  border-color: var(--fire);
+  color: #181004;
+  font-weight: 700;
+}
+
+.ensaya-publish-form .hint {
+  font-size: .7rem;
+  color: #9a9a9a;
+  margin: -4px 0 10px;
+}
+
+.ensaya-publish-form .inline-extra {
+  margin-top: 8px;
+}
+
+.ensaya-publish-form .reassure-box {
+  margin: 16px 0;
+  font-size: .78rem;
+  color: #9a9a9a;
+  background: rgba(255,140,66,.06);
+  border-left: 2px solid var(--fire);
+  padding: 12px 14px;
+  border-radius: 0 2px 2px 0;
+  line-height: 1.6;
+}
+
+.ensaya-publish-form .reassure-box strong {
+  color: var(--text);
+}
+
+.ensaya-publish-form .consent-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 14px 0;
+  font-size: .75rem;
+  color: #9a9a9a;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.ensaya-publish-form .consent-row input {
+  width: auto;
+  margin-top: 3px;
+}
+
+.ensaya-publish-form .btn-submit {
+  width: 100%;
+  background: linear-gradient(135deg, var(--gold), #8b4513);
+  color: var(--text);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: .82rem;
+  padding: 14px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255,140,66,.18);
+  transition: .3s;
+}
+
+.ensaya-publish-form .btn-submit:hover { box-shadow: 0 0 32px rgba(255,140,66,.36); }
+
+.ensaya-publish-form .confirm {
+  display: none;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.ensaya-publish-form .confirm.show {
+  display: block;
+}
+
+.ensaya-publish-form .confirm h2 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--fire);
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.ensaya-publish-form .confirm p {
+  color: #ccc;
+  font-size: .9rem;
+  max-width: 42ch;
+  margin: 0 auto;
+}
+
+.ensaya-publish-form .footer-note {
+  text-align: center;
+  font-size: .68rem;
+  color: #666;
+  margin-top: 1.6rem;
+}
+
+.ensaya-publish-form .hidden {
+  display: none !important;
+}
+
+.ensaya-publish-form .checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: .75rem;
+  color: #9a9a9a;
+}
+
+.ensaya-publish-form .checkbox-inline input {
+  width: auto;
+  margin: 0;
+}
+
+.admin-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 4rem 1.5rem;
+}
+
+.admin-card {
+  width: min(560px, 100%);
+  padding: 2rem;
+  background: #1c211d;
+  border: 1px solid rgba(255,140,66,.12);
+  border-radius: 8px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+}
+
+.admin-card--wide {
+  width: min(900px, 100%);
+}
+
+.admin-card h1 {
+  margin: .5rem 0 1rem;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  line-height: 1.1;
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-form label {
+  display: grid;
+  gap: .45rem;
+  color: var(--muted);
+  font-size: .72rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.admin-form input {
+  width: 100%;
+  padding: .8rem .9rem;
+  background: #141614;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+  color: var(--text);
+}
+
+.admin-error {
+  color: #f2a1a1;
+  font-size: .8rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-request-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-request-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 6px;
+}
+
+.admin-request-item h3 {
+  margin: 0 0 .3rem;
+  font-size: 1.1rem;
+}
+
+.admin-request-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.admin-request-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+@media (max-width: 768px) { .nav-top { padding: .8rem 1.2rem .3rem; } .nav-tabs { justify-content: flex-start; } .nav-tabs a { padding: .55rem .9rem; font-size: .6rem; } .split, .ensaya-wrap { grid-template-columns: 1fr; gap: 2rem; } .admin-request-item, .admin-header { flex-direction: column; align-items: flex-start; } .admin-request-actions { width: 100%; } .admin-request-actions .btn, .admin-request-actions .btn-outline { width: 100%; text-align: center; } }
