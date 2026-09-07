@@ -31,7 +31,14 @@ export default async function SalasPage() {
           <div className="sala-grid">
             {salas.map((sala) => (
               <article className="sala-card" key={sala.id}>
-                <div className="sala-icon" aria-hidden="true">⌂</div>
+                {(sala.imagen_url || sala.foto_url || sala.image_url) && (
+                  <img
+                    src={sala.imagen_url || sala.foto_url || sala.image_url}
+                    alt={sala.nombre}
+                    className="sala-image"
+                    loading="lazy"
+                  />
+                )}
                 <div className="sala-content">
                   <div className="sala-label">Sala disponible</div>
                   <h3>{sala.nombre}</h3>

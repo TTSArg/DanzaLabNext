@@ -209,6 +209,7 @@ export default function AdminPage() {
       caracteristicas: requestData.caracteristicas ?? [],
       precio_hora: requestData.precio_desde ?? null,
       whatsapp: requestData.whatsapp ?? "",
+      imagen_url: String(requestData.imagen_url ?? "").trim() || null,
       activa: true,
     };
 
@@ -230,6 +231,28 @@ export default function AdminPage() {
       console.error("No se pudo actualizar la solicitud:", JSON.stringify(updateError, Object.getOwnPropertyNames(updateError)));
       setError(`La sala se creó, pero no se pudo actualizar el estado: ${errorMessage}`);
       return;
+    }
+
+    try {
+      const emailToSend = String(requestData.email ?? "").trim();
+      if (emailToSend) {
+        const response = await fetch("/api/approval-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: emailToSend,
+            spaceName: requestData.nombre_espacio,
+          }),
+        });
+
+        const responseData = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(responseData?.error || "No se pudo enviar el mail de notificación.");
+        }
+      }
+    } catch (notificationError) {
+      console.error("Approval email notification failed:", notificationError);
+      setError("La sala quedó aprobada, pero no se pudo enviar el email de notificación.");
     }
 
     await loadPendingRequests();

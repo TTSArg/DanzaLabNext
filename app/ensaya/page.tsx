@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 type Space = {
   id: number; name: string; barrio: string; arte: string[]; cap: number;
   tipo: "Formación" | "Premium"; feats: string[]; precio: string; wpp: string; tRespuesta: number;
+  image?: string;
 };
 
 const zones = ["Palermo", "Almagro", "San Telmo", "Villa Crespo", "Caballito", "Boedo", "Chacarita", "Recoleta"];
@@ -23,6 +24,34 @@ function createSpaceSlug(name: string, id: number) {
   return `${normalizedName || "sala"}-${id}`;
 }
 
+async function compressImage(file: File, maxWidth = 1400, quality = 0.72) {
+  const imageBitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  const ratio = Math.min(maxWidth / imageBitmap.width, maxWidth / imageBitmap.height, 1);
+
+  canvas.width = Math.max(1, Math.round(imageBitmap.width * ratio));
+  canvas.height = Math.max(1, Math.round(imageBitmap.height * ratio));
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("No se pudo preparar el canvas para comprimir la imagen.");
+  }
+
+  context.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+
+  const compressedBlob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", quality);
+  });
+
+  if (!compressedBlob) {
+    throw new Error("No se pudo generar la imagen comprimida.");
+  }
+
+  return new File([compressedBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+    type: "image/jpeg",
+  });
+}
+
 type PublishForm = {
   contacto: string;
   rol: string;
@@ -30,6 +59,8 @@ type PublishForm = {
   wpp: string;
   email: string;
   nombre: string;
+  imageUrl: string;
+  imageFile: File | null;
   barrio: string;
   direccion: string;
   ubicacionRef: string;
@@ -73,6 +104,7 @@ type PendingRequest = {
   rol: string | null;
   direccion: string | null;
   ubicacion_ref: string | null;
+  imagen_url: string | null;
 };
 
 const initialPublishForm: PublishForm = {
@@ -82,6 +114,8 @@ const initialPublishForm: PublishForm = {
   wpp: "",
   email: "",
   nombre: "",
+  imageUrl: "",
+  imageFile: null,
   barrio: "",
   direccion: "",
   ubicacionRef: "",
@@ -118,6 +152,19 @@ export default function EnsayaPage() {
   const [selected, setSelected] = useState<Space | null>(null); const [showPublish, setShowPublish] = useState(false);
   const [publishForm, setPublishForm] = useState<PublishForm>(initialPublishForm);
   const [publishSubmitted, setPublishSubmitted] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!publishForm.imageFile) {
+      setImagePreviewUrl(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(publishForm.imageFile);
+    setImagePreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [publishForm.imageFile]);
 
   async function loadPublicSpaces() {
     const { data, error } = await supabase.from("salas").select("*").eq("activa", true).order("nombre");
@@ -137,6 +184,7 @@ export default function EnsayaPage() {
       precio: sala.precio_hora ? `$${Number(sala.precio_hora).toLocaleString("es-AR")}/hora` : "Consultar",
       wpp: sala.whatsapp ?? "",
       tRespuesta: sala.tiempo_respuesta_minutos ?? 60,
+      image: sala.imagen_url ?? sala.foto_url ?? sala.image_url ?? null,
     })));
   }
 
@@ -175,15 +223,60 @@ export default function EnsayaPage() {
     });
   }
 
+  async function uploadRoomImage(file: File) {
+    const compressedFile = await compressImage(file);
+    const fileExt = compressedFile.name.split(".").pop() ?? "jpg";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const { data, error } = await supabase.storage.from("salas").upload(fileName, compressedFile, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: compressedFile.type || "image/jpeg",
+    });
+
+    if (error || !data?.path) {
+      console.error("Storage upload error:", error);
+      throw new Error(error?.message || "Supabase Storage no devolvió la ruta de la imagen.");
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("salas").getPublicUrl(data.path);
+    if (!publicUrlData.publicUrl) {
+      throw new Error("No se pudo obtener la URL pública de la imagen.");
+    }
+
+    return publicUrlData.publicUrl;
+  }
+
   async function addSpace(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedEmail = publishForm.email.trim();
+
     if (!publishForm.nombre.trim() || !publishForm.wpp.trim()) {
       alert("Completá al menos el nombre del espacio y el WhatsApp de contacto.");
       return;
     }
+
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      alert("Ingresá un email válido para recibir la notificación cuando tu espacio sea aprobado.");
+      return;
+    }
+
     if (!publishForm.consent) {
       alert("Necesitamos que confirmes las condiciones para sumar el espacio.");
       return;
+    }
+
+    let uploadedImageUrl: string | null = null;
+    if (publishForm.imageFile) {
+      setUploadingImage(true);
+      try {
+        uploadedImageUrl = await uploadRoomImage(publishForm.imageFile);
+      } catch (uploadError) {
+        console.error("Room image upload failed:", uploadError);
+        alert(`No pudimos subir la imagen: ${uploadError instanceof Error ? uploadError.message : "error desconocido"}`);
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
     }
 
     const payload = {
@@ -191,7 +284,8 @@ export default function EnsayaPage() {
       contacto: publishForm.contacto || null,
       rol: publishForm.rol === "Otro" ? (publishForm.rolOtro || "Otro") : publishForm.rol || null,
       whatsapp: publishForm.wpp.trim(),
-      email: publishForm.email || null,
+      email: normalizedEmail,
+      imagen_url: uploadedImageUrl || publishForm.imageUrl.trim() || null,
       barrio: publishForm.barrio || null,
       direccion: publishForm.direccion || null,
       ubicacion_ref: publishForm.ubicacionRef || null,
@@ -230,6 +324,8 @@ export default function EnsayaPage() {
   }
 
   async function approvePendingSpace(request: PendingRequest) {
+    const normalizedImageUrl = String(request.imagen_url ?? "").trim() || null;
+
     const approvedSpace = {
       nombre: request.nombre_espacio,
       slug: createSpaceSlug(request.nombre_espacio, request.id),
@@ -239,6 +335,7 @@ export default function EnsayaPage() {
       caracteristicas: request.caracteristicas ?? [],
       precio_hora: request.precio_desde && request.precio_hasta ? Number(request.precio_desde) : null,
       whatsapp: request.whatsapp ?? "",
+      imagen_url: normalizedImageUrl,
       activa: true,
     };
 
@@ -317,8 +414,8 @@ export default function EnsayaPage() {
                   <input type="text" value={publishForm.wpp} onChange={(e) => updatePublishForm("wpp", e.target.value)} placeholder="Ej: 5491122334455" />
                 </div>
                 <div>
-                  <label>Email (opcional)</label>
-                  <input type="email" value={publishForm.email} onChange={(e) => updatePublishForm("email", e.target.value)} placeholder="tu@email.com" />
+                  <label>Email (obligatorio)</label>
+                  <input type="email" value={publishForm.email} onChange={(e) => updatePublishForm("email", e.target.value)} placeholder="tu@email.com" required />
                 </div>
               </div>
 
@@ -337,6 +434,29 @@ export default function EnsayaPage() {
                   </select>
                 </div>
               </div>
+
+              <label>Imagen del espacio (opcional)</label>
+              <div className="image-upload-wrap">
+                <input
+                  id="room-image-upload"
+                  type="file"
+                  accept="image/*"
+                  className="image-upload-input"
+                  onChange={(e) => updatePublishForm("imageFile", e.target.files?.[0] ?? null)}
+                />
+                <label htmlFor="room-image-upload" className="image-upload-button">Seleccionar imagen</label>
+                <span className="image-upload-filename">
+                  {publishForm.imageFile ? publishForm.imageFile.name : "Ninguna imagen seleccionada"}
+                </span>
+              </div>
+              {imagePreviewUrl && <img className="image-upload-preview" src={imagePreviewUrl} alt="Vista previa del espacio" />}
+              <div className="hint">Subí una imagen desde tu equipo. También podés dejar una URL pública si preferís.</div>
+
+              <label>URL de la imagen (opcional)</label>
+              <input type="url" value={publishForm.imageUrl} onChange={(e) => updatePublishForm("imageUrl", e.target.value)} placeholder="https://ejemplo.com/imagen.jpg" />
+              <div className="hint">Podés usar una foto pública o una URL de Supabase, Unsplash o Drive.</div>
+
+              {uploadingImage && <p className="status-message">Subiendo imagen...</p>}
 
               <label>Dirección exacta (opcional)</label>
               <input type="text" value={publishForm.direccion} onChange={(e) => updatePublishForm("direccion", e.target.value)} placeholder="Calle y altura" />
@@ -549,8 +669,18 @@ export default function EnsayaPage() {
   </main>;
 }
 
-function SpaceCard({ space, onSelect }: { space: Space; onSelect: (space: Space) => void }) { return <article className="ensaya-card" onClick={() => onSelect(space)}><div className="space-card-top"><div className="space-initial">{space.name.charAt(0)}</div><div><h3>{space.name}</h3><p>{space.barrio} · hasta {space.cap} personas</p></div></div><div className="space-badges"><span className={space.tipo === "Premium" ? "badge premium" : "badge rapida"}>{space.tipo}</span>{space.tRespuesta <= 30 && <span className="badge rapida">Respuesta rápida</span>}</div><div className="space-tags">{space.feats.slice(0, 3).map((feature) => <span key={feature}>{feature}</span>)}</div><div className="space-bottom"><span>{space.precio}</span><button className="btn-consult" onClick={(event) => { event.stopPropagation(); onSelect(space); }}>Consultar</button></div></article>; }
-function DetailModal({ space, onClose }: { space: Space; onClose: () => void }) { return <div className="ensaya-modal-backdrop" onClick={onClose}><aside className="ensaya-detail" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={onClose}>×</button><div className="inner-label">Sala de ensayo</div><h2>{space.name}</h2><p>{space.barrio} · {space.arte.join(", ")} · hasta {space.cap} personas</p><h3>Características</h3><div className="space-tags">{space.feats.map((feature) => <span key={feature}>{feature}</span>)}</div><h3>Tarifa de referencia</h3><p>{space.precio}</p><h3>Disponibilidad esta semana</h3><div className="schedule-grid">{["Lun 18h", "Lun 20h", "Mar 10h", "Mié 19h", "Jue 18h", "Vie 15h", "Sáb 11h", "Sáb 17h"].map((slot, index) => <span className={index === 1 || index === 4 ? "slot busy" : "slot"} key={slot}>{slot}</span>)}</div><a className="btn btn-block" href={`https://wa.me/${space.wpp}?text=Hola%2C%20te%20escribo%20desde%20Ensaya%20para%20consultar%20disponibilidad.`} target="_blank" rel="noreferrer">Consultar disponibilidad</a></aside></div>; }
+function SpaceCard({ space, onSelect }: { space: Space; onSelect: (space: Space) => void }) {
+  return <article className="ensaya-card" onClick={() => onSelect(space)}>
+    {space.image && <div className="space-card-image"><img src={space.image} alt={space.name} loading="lazy" /></div>}
+    <div className="space-card-top"><div className="space-initial">{space.name.charAt(0)}</div><div><h3>{space.name}</h3><p>{space.barrio} · hasta {space.cap} personas</p></div></div>
+    <div className="space-badges"><span className={space.tipo === "Premium" ? "badge premium" : "badge rapida"}>{space.tipo}</span>{space.tRespuesta <= 30 && <span className="badge rapida">Respuesta rápida</span>}</div>
+    <div className="space-tags">{space.feats.slice(0, 3).map((feature) => <span key={feature}>{feature}</span>)}</div>
+    <div className="space-bottom"><span>{space.precio}</span><button className="btn-consult" onClick={(event) => { event.stopPropagation(); onSelect(space); }}>Consultar</button></div>
+  </article>;
+}
+function DetailModal({ space, onClose }: { space: Space; onClose: () => void }) {
+  return <div className="ensaya-modal-backdrop" onClick={onClose}><aside className="ensaya-detail" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={onClose}>×</button>{space.image && <div className="detail-cover"><img src={space.image} alt={space.name} /></div>}<div className="inner-label">Sala de ensayo</div><h2>{space.name}</h2><p>{space.barrio} · {space.arte.join(", ")} · hasta {space.cap} personas</p><h3>Características</h3><div className="space-tags">{space.feats.map((feature) => <span key={feature}>{feature}</span>)}</div><h3>Tarifa de referencia</h3><p>{space.precio}</p><h3>Disponibilidad esta semana</h3><div className="schedule-grid">{["Lun 18h", "Lun 20h", "Mar 10h", "Mié 19h", "Jue 18h", "Vie 15h", "Sáb 11h", "Sáb 17h"].map((slot, index) => <span className={index === 1 || index === 4 ? "slot busy" : "slot"} key={slot}>{slot}</span>)}</div><a className="btn btn-block" href={`https://wa.me/${space.wpp}?text=Hola%2C%20te%20escribo%20desde%20Ensaya%20para%20consultar%20disponibilidad.`} target="_blank" rel="noreferrer">Consultar disponibilidad</a></aside></div>;
+}
 function AdminView({
   spaces,
   pendingSpaces,
