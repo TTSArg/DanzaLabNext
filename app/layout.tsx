@@ -14,8 +14,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Danza Lab | Artes del movimiento",
-  description: "Una plataforma para explorar, entrenar y crear desde la danza.",
+  metadataBase: new URL("https://danzalab.com"),
+  title: {
+    default: "Danza Lab | Artes del movimiento",
+    template: "%s | Danza Lab",
+  },
+  description:
+    "Danza Lab conecta laboratorios de danza, salas de ensayo, composición escénica y formación artística en Buenos Aires.",
+  keywords: [
+    "Danza Lab",
+    "salas de ensayo",
+    "laboratorios de danza",
+    "composición escénica",
+    "artes del movimiento",
+    "Buenos Aires",
+    "formación en danza",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Danza Lab | Artes del movimiento",
+    description:
+      "Laboratorios, salas de ensayo y formación artística para explorar y crear desde la danza en Buenos Aires.",
+    url: "https://danzalab.com",
+    siteName: "Danza Lab",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Danza Lab",
+    description:
+      "Salas de ensayo, laboratorios de danza y composición escénica en Buenos Aires.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
