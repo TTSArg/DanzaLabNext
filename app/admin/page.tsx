@@ -15,8 +15,47 @@ type PendingRequest = {
   estado: string;
   tipo_servicio: string | null;
   capacidad: number | null;
+  precio_desde?: number | null;
+  disciplinas?: string[] | null;
+  caracteristicas?: string[] | null;
+  imagen_url?: string | null;
+  fotos_adicionales?: unknown;
+  email?: string | null;
   created_at: string;
 };
+
+function normalizeImageList(value: unknown): string[] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "string" ? item.trim() : String(item ?? "").trim()))
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => (typeof item === "string" ? item.trim() : String(item ?? "").trim()))
+          .filter(Boolean);
+      }
+    } catch {
+      // ignore
+    }
+
+    return trimmed
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
 
 const ADMIN_EMAILS = new Set([
   "ttservicios.arg@gmail.com",
@@ -56,6 +95,8 @@ export default function AdminPage() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [previewRequest, setPreviewRequest] = useState<PendingRequest | null>(null);
+  const [pressedAction, setPressedAction] = useState<Record<number, "approve" | "reject">>({});
   const [error, setError] = useState<string | null>(null);
 
   async function loadProfile(userId: string | undefined) {
@@ -102,7 +143,7 @@ export default function AdminPage() {
   async function loadPendingRequests() {
     const { data, error: requestsError } = await supabase
       .from("espacios_solicitudes")
-      .select("id, nombre_espacio, barrio, whatsapp, estado, tipo_servicio, capacidad, created_at")
+      .select("id, nombre_espacio, barrio, whatsapp, estado, tipo_servicio, capacidad, precio_desde, disciplinas, caracteristicas, imagen_url, fotos_adicionales, email, created_at")
       .eq("estado", "pendiente")
       .order("created_at", { ascending: false });
 
@@ -187,6 +228,7 @@ export default function AdminPage() {
 
   async function approveRequest(requestId: number) {
     setError(null);
+    setPressedAction((previous) => ({ ...previous, [requestId]: "approve" }));
 
     const { data: requestData, error: requestError } = await supabase
       .from("espacios_solicitudes")
@@ -200,6 +242,8 @@ export default function AdminPage() {
       return;
     }
 
+    const additionalImages = normalizeImageList(requestData.fotos_adicionales);
+
     const spacePayload = {
       nombre: requestData.nombre_espacio,
       slug: createSpaceSlug(requestData.nombre_espacio, requestId),
@@ -210,6 +254,7 @@ export default function AdminPage() {
       precio_hora: requestData.precio_desde ?? null,
       whatsapp: requestData.whatsapp ?? "",
       imagen_url: String(requestData.imagen_url ?? "").trim() || null,
+      fotos_adicionales: additionalImages.length ? additionalImages : null,
       activa: true,
     };
 
@@ -259,6 +304,8 @@ export default function AdminPage() {
   }
 
   async function rejectRequest(requestId: number) {
+    setPressedAction((previous) => ({ ...previous, [requestId]: "reject" }));
+
     const { error } = await supabase
       .from("espacios_solicitudes")
       .update({ estado: "rechazado", updated_at: new Date().toISOString() })
@@ -335,14 +382,86 @@ export default function AdminPage() {
                 </div>
 
                 <div className="admin-request-actions">
-                  <button className="btn" onClick={() => approveRequest(request.id)}>Aprobar</button>
-                  <button className="btn-outline" onClick={() => rejectRequest(request.id)}>Rechazar</button>
+                  <button className="mini-btn mini-btn--preview" onClick={() => setPreviewRequest(request)}>Ver</button>
+                  <button
+                    className={`mini-btn mini-btn--approve ${pressedAction[request.id] === "approve" ? "is-clicked" : ""}`}
+                    onClick={() => approveRequest(request.id)}
+                  >
+                    Aprobar
+                  </button>
+                  <button
+                    className={`mini-btn mini-btn--reject ${pressedAction[request.id] === "reject" ? "is-clicked" : ""}`}
+                    onClick={() => rejectRequest(request.id)}
+                  >
+                    Rechazar
+                  </button>
                 </div>
               </article>
             ))}
           </div>
         )}
       </div>
+
+      {previewRequest && (
+        <div className="admin-preview-backdrop" onClick={() => setPreviewRequest(null)}>
+          <div className="admin-preview-modal" onClick={(event) => event.stopPropagation()}>
+            <button className="modal-close" onClick={() => setPreviewRequest(null)} aria-label="Cerrar vista previa">
+              ×
+            </button>
+
+            <div className="inner-label">Vista previa · Sala aprobada</div>
+            <h2>{previewRequest.nombre_espacio}</h2>
+
+            <div className="admin-preview-cover">
+              {previewRequest.imagen_url ? (
+                <img src={previewRequest.imagen_url} alt={previewRequest.nombre_espacio} />
+              ) : (
+                <div className="admin-preview-placeholder">Sin imagen</div>
+              )}
+            </div>
+
+            {normalizeImageList(previewRequest.fotos_adicionales).length > 0 && (
+              <div className="admin-preview-gallery">
+                {normalizeImageList(previewRequest.fotos_adicionales).map((photo, index) => (
+                  <img key={`${photo}-${index}`} src={photo} alt={`${previewRequest.nombre_espacio} foto adicional ${index + 1}`} />
+                ))}
+              </div>
+            )}
+
+            <div className="admin-preview-summary">
+              <span>{previewRequest.barrio ?? "Sin barrio"}</span>
+              <span>{previewRequest.tipo_servicio ?? "Formación y práctica"}</span>
+            </div>
+
+            <div className="admin-preview-grid">
+              <div>
+                <span>Capacidad</span>
+                <strong>{previewRequest.capacidad ?? 0} personas</strong>
+              </div>
+              <div>
+                <span>Precio</span>
+                <strong>{previewRequest.precio_desde != null ? `$${Number(previewRequest.precio_desde).toLocaleString("es-AR")}/hora` : "Consultar"}</strong>
+              </div>
+            </div>
+
+            <div className="admin-preview-tags">
+              {(previewRequest.disciplinas ?? []).length > 0 ? (
+                (previewRequest.disciplinas ?? []).map((discipline) => (
+                  <span key={discipline}>{discipline}</span>
+                ))
+              ) : (
+                <span>Formación</span>
+              )}
+              {(previewRequest.caracteristicas ?? []).slice(0, 4).map((feature) => (
+                <span key={feature}>{feature}</span>
+              ))}
+            </div>
+
+            <p className="admin-preview-contact">Contacto: {previewRequest.whatsapp}</p>
+            <button className="btn admin-preview-close" onClick={() => setPreviewRequest(null)}>Cerrar</button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
