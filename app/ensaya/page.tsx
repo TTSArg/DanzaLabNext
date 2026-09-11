@@ -203,6 +203,7 @@ export default function EnsayaPage() {
   const [selected, setSelected] = useState<Space | null>(null); const [previewRequest, setPreviewRequest] = useState<PendingRequest | null>(null); const [showPublish, setShowPublish] = useState(false);
   const [publishForm, setPublishForm] = useState<PublishForm>(initialPublishForm);
   const [publishSubmitted, setPublishSubmitted] = useState(false);
+  const [submitPressed, setSubmitPressed] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [galleryPreviewUrls, setGalleryPreviewUrls] = useState<Record<string, string>>({});
@@ -459,6 +460,7 @@ export default function EnsayaPage() {
       return;
     }
 
+    setSubmitPressed(true);
     setPublishSubmitted(true);
     await loadPendingSpaces();
   }
@@ -543,6 +545,7 @@ export default function EnsayaPage() {
   function closePublishModal() {
     setShowPublish(false);
     setPublishSubmitted(false);
+    setSubmitPressed(false);
     setPublishForm(initialPublishForm);
   }
 
@@ -576,7 +579,7 @@ export default function EnsayaPage() {
   }
 
   return <main className="ensaya-page page">
-    <header className="ensaya-topbar"><div><strong className="ensaya-brand">Danza Lab · Ensaya</strong><span className="ensaya-tag">salas de ensayo · CABA</span></div><div className="ensaya-tabs"><button className={view === "buscar" ? "active" : ""} onClick={() => setView("buscar")}>Buscar salas</button><button className={view === "admin" ? "active" : ""} onClick={() => setView("admin")}>Panel de gestión</button></div><button className="btn ensaya-publish" onClick={() => setShowPublish(true)}>Publicar mi espacio</button></header>
+    <header className="ensaya-topbar"><div><strong className="ensaya-brand">Danza Lab · Ensaya</strong><span className="ensaya-tag">salas de ensayo · CABA</span></div><div className="ensaya-tabs"><button className={view === "buscar" ? "active" : ""} onClick={() => setView("buscar")}>Buscar salas</button><Link href="/admin" className={view === "admin" ? "active" : ""}>Panel de gestión</Link></div><button className="btn ensaya-publish" onClick={() => setShowPublish(true)}>Publicar mi espacio</button></header>
     {view === "buscar" ? <>
       <section className="ensaya-hero"><div className="ensaya-hero-inner"><div className="inner-label">Un espacio de Danza Lab</div><h1>Encontrá sala.<br />Ensayá hoy.</h1><p>Todas las salas de ensayo de CABA, en un solo lugar. Filtrá por zona, disciplina y capacidad.</p><div className="ensaya-search"><label>Zona<select value={zone} onChange={(event) => setZone(event.target.value)}><option value="">Cualquier barrio</option>{zones.map((item) => <option key={item}>{item}</option>)}</select></label><label>Disciplina<select value={discipline} onChange={(event) => setDiscipline(event.target.value)}><option value="">Todas</option>{disciplines.map((item) => <option key={item}>{item}</option>)}</select></label><label>Personas<input type="number" min="1" placeholder="Ej: 6" value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label><button className="btn" onClick={() => setView("buscar")}>Buscar</button></div></div></section>
       <div className="ensaya-filters"><button className={activeType === "Formación" ? "chip active" : "chip"} onClick={() => setActiveType(activeType === "Formación" ? "" : "Formación")}>Formación y práctica</button><button className={activeType === "Premium" ? "chip active" : "chip"} onClick={() => setActiveType(activeType === "Premium" ? "" : "Premium")}>Espacios premium</button><span className="filters-sep" />{featureFilters.map((feature) => <button className={activeFeatures.includes(feature) ? "chip active" : "chip"} key={feature} onClick={() => toggleFeature(feature)}>{feature}</button>)}<span className="results-count">{filteredSpaces.length} {filteredSpaces.length === 1 ? "sala encontrada" : "salas encontradas"}</span></div>
@@ -895,7 +898,7 @@ export default function EnsayaPage() {
                 Entiendo las condiciones para sumar mi espacio y confirmo que soy dueño/a, coordinador/a, encargado/a u otra persona autorizada de este lugar.
               </label>
 
-              <button className="btn-submit is-clicked" type="submit">Enviar espacio para revisión</button>
+              <button className={`btn-submit ${submitPressed ? "is-clicked" : ""}`} type="submit">Enviar espacio para revisión</button>
               <p className="footer-note">Un espacio del equipo de Ensaya revisa cada solicitud antes de publicarla.</p>
             </form>
           ) : (

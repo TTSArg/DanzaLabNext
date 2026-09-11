@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -16,11 +17,17 @@ type PendingRequest = {
   tipo_servicio: string | null;
   capacidad: number | null;
   precio_desde?: number | null;
+  precio_hasta?: number | null;
   disciplinas?: string[] | null;
   caracteristicas?: string[] | null;
   imagen_url?: string | null;
   fotos_adicionales?: unknown;
   email?: string | null;
+  contacto?: string | null;
+  direccion?: string | null;
+  ubicacion_ref?: string | null;
+  medios_contacto?: string[] | null;
+  horarios_notas?: string | null;
   created_at: string;
 };
 
@@ -95,6 +102,7 @@ export default function AdminPage() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [spaces, setSpaces] = useState<Array<{ id: number; nombre: string; barrio: string | null; tipo: string | null; capacidad: number | null }>>([]);
   const [previewRequest, setPreviewRequest] = useState<PendingRequest | null>(null);
   const [pressedAction, setPressedAction] = useState<Record<number, "approve" | "reject">>({});
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +160,54 @@ export default function AdminPage() {
       return;
     }
 
-    setRequests((data ?? []) as PendingRequest[]);
+    const result = (data ?? []) as PendingRequest[];
+    setRequests(result);
+  }
+
+  async function removeActiveSpaces() {
+    if (!spaces.length) return;
+
+    const ids = spaces.map((space) => space.id);
+    const { error } = await supabase
+      .from("salas")
+      .update({ activa: false })
+      .in("id", ids);
+
+    if (error) {
+      console.error("Error al eliminar salas activas:", error);
+      setError("No pudimos eliminar las salas activas.");
+      return;
+    }
+
+    setSpaces([]);
+    setError(null);
+  }
+
+  async function loadActiveSpaces() {
+    const { data, error } = await supabase
+      .from("salas")
+      .select("*")
+      .order("nombre");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const activeSpaces = (data ?? []).filter((item) => {
+      const value = item?.activa;
+      return value === true || value === 1 || value === "true" || value === "TRUE";
+    });
+
+    setSpaces(
+      activeSpaces.map((item) => ({
+        id: item.id,
+        nombre: item.nombre || item.nombre_espacio || "Sala sin nombre",
+        barrio: item.zona || item.barrio || "Sin barrio",
+        tipo: item.tipo || "Formación",
+        capacidad: item.capacidad ?? 0,
+      }))
+    );
   }
 
   async function refreshAccess() {
@@ -192,6 +247,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (profile?.role === "admin") {
       loadPendingRequests();
+      loadActiveSpaces();
     }
   }, [profile]);
 
@@ -300,7 +356,7 @@ export default function AdminPage() {
       setError("La sala quedó aprobada, pero no se pudo enviar el email de notificación.");
     }
 
-    await loadPendingRequests();
+    await Promise.all([loadPendingRequests(), loadActiveSpaces()]);
   }
 
   async function rejectRequest(requestId: number) {
@@ -312,7 +368,7 @@ export default function AdminPage() {
       .eq("id", requestId);
 
     if (!error) {
-      await loadPendingRequests();
+      await Promise.all([loadPendingRequests(), loadActiveSpaces()]);
     }
   }
 
@@ -361,45 +417,113 @@ export default function AdminPage() {
       <div className="admin-card admin-card--wide">
         <div className="admin-header">
           <div>
-            <div className="inner-label">Ensaya · Admin</div>
-            <h1>Solicitudes pendientes</h1>
+            <div className="inner-label">Ensaya · Gestión</div>
+            <h1>Panel de gestión mensual</h1>
           </div>
           <button className="btn-outline" onClick={handleSignOut}>Salir</button>
         </div>
 
         {error && <p className="admin-error">{error}</p>}
 
-        {requests.length === 0 ? (
-          <p className="status-message">No hay solicitudes pendientes para revisar.</p>
-        ) : (
-          <div className="admin-request-list">
-            {requests.map((request) => (
-              <article key={request.id} className="admin-request-item">
-                <div>
-                  <h3>{request.nombre_espacio}</h3>
-                  <p>{request.barrio ?? "Sin barrio"} · {request.whatsapp}</p>
-                  <p>{request.tipo_servicio ?? "Formación y práctica"} · {request.capacidad ?? 0} personas</p>
-                </div>
+        <div className="admin-grid">
+          <div className="admin-panel">
+            <h3>Espacios activos</h3>
+            <p className="hint">Los que ya están publicados en el buscador.</p>
 
-                <div className="admin-request-actions">
-                  <button className="mini-btn mini-btn--preview" onClick={() => setPreviewRequest(request)}>Ver</button>
-                  <button
-                    className={`mini-btn mini-btn--approve ${pressedAction[request.id] === "approve" ? "is-clicked" : ""}`}
-                    onClick={() => approveRequest(request.id)}
-                  >
-                    Aprobar
-                  </button>
-                  <button
-                    className={`mini-btn mini-btn--reject ${pressedAction[request.id] === "reject" ? "is-clicked" : ""}`}
-                    onClick={() => rejectRequest(request.id)}
-                  >
-                    Rechazar
-                  </button>
+            {spaces.length ? (
+              spaces.map((space) => (
+                <div className="space-list-item" key={space.id}>
+                  <span>{space.nombre} · {space.barrio ?? "Sin barrio"}</span>
+                  <span>{space.tipo ?? "Formación"}</span>
                 </div>
-              </article>
-            ))}
+              ))
+            ) : (
+              <p className="hint">No hay espacios activos todavía.</p>
+            )}
+
+            <button className="btn btn-add" onClick={removeActiveSpaces} disabled={!spaces.length}>Eliminar salas</button>
           </div>
-        )}
+
+          <div className="admin-panel">
+            <h3>Solicitudes pendientes</h3>
+            <p className="hint">Revisión previa antes de publicar.</p>
+
+            {requests.length ? (
+              requests.map((request) => {
+                const galleryImages = normalizeImageList(request.fotos_adicionales);
+                const displayImages = [request.imagen_url, ...galleryImages].filter((item): item is string => Boolean(item && item.trim()));
+
+                return (
+                  <div className="pending-request-card" key={request.id}>
+                    <div className="pending-request-header">
+                      <div>
+                        <strong>{request.nombre_espacio}</strong>
+                        <span>{request.barrio ?? "Sin barrio"}</span>
+                      </div>
+                      <div className="approval-actions">
+                        <button className="mini-btn mini-btn--preview" onClick={() => setPreviewRequest(request)}>Ver</button>
+                        <button className={`mini-btn mini-btn--approve ${pressedAction[request.id] === "approve" ? "is-clicked" : ""}`} onClick={() => approveRequest(request.id)}>Aprobar</button>
+                        <button className="mini-btn mini-btn--reject" onClick={() => rejectRequest(request.id)}>Rechazar</button>
+                      </div>
+                    </div>
+
+                    <div className="pending-request-meta">
+                      <div>
+                        <span>Contacto</span>
+                        <strong>{request.contacto || "No indicado"}</strong>
+                      </div>
+                      <div>
+                        <span>WhatsApp</span>
+                        <strong>{request.whatsapp || "No indicado"}</strong>
+                      </div>
+                      <div>
+                        <span>Email</span>
+                        <strong>{request.email || "No indicado"}</strong>
+                      </div>
+                      <div>
+                        <span>Capacidad</span>
+                        <strong>{request.capacidad ? `${request.capacidad} personas` : "No indicado"}</strong>
+                      </div>
+                      <div>
+                        <span>Tipo</span>
+                        <strong>{request.tipo_servicio || "No indicado"}</strong>
+                      </div>
+                      <div>
+                        <span>Precio</span>
+                        <strong>{request.precio_desde != null || request.precio_hasta != null ? `$${request.precio_desde ?? 0} - $${request.precio_hasta ?? 0}` : "No indicado"}</strong>
+                      </div>
+                    </div>
+
+                    {(request.direccion || request.ubicacion_ref || request.disciplinas?.length || request.caracteristicas?.length || request.horarios_notas || request.medios_contacto?.length) && (
+                      <div className="pending-request-detail-list">
+                        {request.direccion && <p><strong>Dirección:</strong> {request.direccion}</p>}
+                        {request.ubicacion_ref && <p><strong>Referencia:</strong> {request.ubicacion_ref}</p>}
+                        {request.disciplinas?.length ? <p><strong>Disciplinas:</strong> {request.disciplinas.join(", ")}</p> : null}
+                        {request.caracteristicas?.length ? <p><strong>Características:</strong> {request.caracteristicas.join(", ")}</p> : null}
+                        {request.medios_contacto?.length ? <p><strong>Medio de contacto:</strong> {request.medios_contacto.join(", ")}</p> : null}
+                        {request.horarios_notas && <p><strong>Notas:</strong> {request.horarios_notas}</p>}
+                      </div>
+                    )}
+
+                    {displayImages.length > 0 && (
+                      <div className="pending-request-photos">
+                        <div className="pending-request-photos__grid">
+                          {displayImages.map((photoUrl, index) => (
+                            <img key={`${photoUrl}-${index}`} src={photoUrl} alt={`${request.nombre_espacio} vista ${index + 1}`} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="hint">No hay solicitudes pendientes por revisar.</p>
+            )}
+
+            <Link className="btn-outline" href="/ensaya/salas">Ver listado público</Link>
+          </div>
+        </div>
       </div>
 
       {previewRequest && (
