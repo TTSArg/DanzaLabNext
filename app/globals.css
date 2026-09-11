@@ -84,8 +84,7 @@ p { color: #aaa; }
 .ensaya-results { display: grid; max-width: 1000px; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; margin: 1.6rem auto 5rem; padding: 0 2rem; }
 .ensaya-card { display: flex; min-height: 245px; flex-direction: column; gap: .8rem; padding: 1.3rem; background: #1c211d; border: 1px solid rgba(255,140,66,.12); border-radius: 4px; cursor: pointer; transition: transform .25s, box-shadow .25s; }
 .ensaya-card:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,.4); }
-.space-card-top { display: flex; align-items: center; gap: 12px; }
-.space-initial { display: flex; width: 50px; height: 50px; flex-shrink: 0; align-items: center; justify-content: center; border: 3px solid var(--fire); border-radius: 50%; color: var(--text); font-size: 1.1rem; font-weight: 800; }
+.space-card-top { display: block; }
 .ensaya-card h3 { margin: 0; color: var(--text); font-size: 1rem; letter-spacing: .3px; line-height: 1.2; }
 .ensaya-card p { margin: 2px 0 0; color: var(--muted); font-size: .72rem; }
 .space-badges, .space-tags { display: flex; flex-wrap: wrap; gap: 6px; }

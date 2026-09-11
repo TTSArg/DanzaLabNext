@@ -913,7 +913,10 @@ export default function EnsayaPage() {
 function SpaceCard({ space, onSelect }: { space: Space; onSelect: (space: Space) => void }) {
   return <article className="ensaya-card" onClick={() => onSelect(space)}>
     {space.image && <div className="space-card-image"><img src={space.image} alt={space.name} loading="lazy" /></div>}
-    <div className="space-card-top"><div className="space-initial">{space.name.charAt(0)}</div><div><h3>{space.name}</h3><p>{space.barrio} · hasta {space.cap} personas</p></div></div>
+    <div className="space-card-top">
+      <h3>{space.name}</h3>
+      <p>{space.barrio} · hasta {space.cap} personas</p>
+    </div>
     <div className="space-badges"><span className={space.tipo === "Premium" ? "badge premium" : "badge rapida"}>{space.tipo}</span>{space.tRespuesta <= 30 && <span className="badge rapida">Respuesta rápida</span>}</div>
     <div className="space-tags">{space.feats.slice(0, 3).map((feature) => <span key={feature}>{feature}</span>)}</div>
     <div className="space-bottom"><span>{space.precio}</span><button className="btn-consult" onClick={(event) => { event.stopPropagation(); onSelect(space); }}>Consultar</button></div>
