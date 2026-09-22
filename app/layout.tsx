@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://danzalab.com"),
+  metadataBase: new URL("https://danzalab.com.ar"),
   title: {
     default: "Danza Lab | Artes del movimiento",
     template: "%s | Danza Lab",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: "Danza Lab | Artes del movimiento",
     description:
       "Laboratorios, salas de ensayo y formación artística para explorar y crear desde la danza en Buenos Aires.",
-    url: "https://danzalab.com",
+    url: "https://danzalab.com.ar",
     siteName: "Danza Lab",
     locale: "es_AR",
     type: "website",

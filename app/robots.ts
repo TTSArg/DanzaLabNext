@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/api/"],
     },
-    sitemap: "https://danzalab.com/sitemap.xml",
-    host: "https://danzalab.com",
+    sitemap: "https://danzalab.com.ar/sitemap.xml",
+    host: "https://danzalab.com.ar",
   };
 }

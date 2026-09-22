@@ -5,7 +5,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Danza Lab",
-    url: "https://danzalab.com",
+    url: "https://danzalab.com.ar",
     description:
       "Danza Lab conecta laboratorios de danza, salas de ensayo y composición escénica para artistas y colectivos en Buenos Aires.",
     areaServed: "Buenos Aires",
