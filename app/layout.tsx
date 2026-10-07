@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SiteFooter, SiteNav } from "./components/site";
+import { SiteFooter, SiteNav, WhatsAppFloat } from "./components/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,7 +60,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body><SiteNav />{children}<SiteFooter /></body>
+      <body>
+        <SiteNav />
+        {children}
+        <SiteFooter />
+        <WhatsAppFloat />
+      </body>
     </html>
   );
 }
