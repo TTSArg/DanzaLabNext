@@ -1,266 +1,243 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type Point = { x: number; y: number };
-type Particle = Point & {
-  tx: number;
-  ty: number;
-  r: number;
-  rgb: [number, number, number];
-  ex: number | null;
-  ey: number | null;
-  phaseOffset: number;
-  wiggle: number;
+const ambientParticles = [
+  { x: 92, y: 142, radius: 2 },
+  { x: 210, y: 316, radius: 1.5 },
+  { x: 336, y: 108, radius: 2.5 },
+  { x: 418, y: 732, radius: 1.5 },
+  { x: 526, y: 206, radius: 1.5 },
+  { x: 686, y: 112, radius: 2 },
+  { x: 808, y: 758, radius: 2.5 },
+  { x: 934, y: 218, radius: 1.5 },
+  { x: 1048, y: 128, radius: 2 },
+  { x: 1182, y: 708, radius: 1.5 },
+  { x: 1336, y: 254, radius: 2.5 },
+  { x: 128, y: 622, radius: 2.5 },
+];
+
+const secondaryAmbientParticles = [
+  { x: 168, y: 474, radius: 1.5 },
+  { x: 294, y: 814, radius: 2 },
+  { x: 454, y: 392, radius: 2.5 },
+  { x: 592, y: 624, radius: 1.5 },
+  { x: 742, y: 286, radius: 2 },
+  { x: 872, y: 562, radius: 1.5 },
+  { x: 1014, y: 804, radius: 2.5 },
+  { x: 1138, y: 386, radius: 2 },
+  { x: 1288, y: 552, radius: 1.5 },
+  { x: 1370, y: 112, radius: 2 },
+];
+
+const crossingParticles = Array.from({ length: 18 }, (_, index) => {
+  const startY = 100 + ((index * 173) % 720);
+  const centerY = 300 + ((index * 89) % 300);
+  const direction = index % 2 === 0 ? 1 : -1;
+  const startX = direction === 1 ? -30 : 1470;
+  const endX = direction === 1 ? 1470 : -30;
+
+  return {
+    index,
+    startX,
+    endX,
+    startY,
+    centerY,
+    endY: 100 + ((index * 127 + 270) % 720),
+    duration: 8 + (index % 5) * 2,
+    delay: -((index * 3) % 17),
+  };
+});
+
+type LetterParticle = {
+  key: string;
+  x: number;
+  y: number;
+  radius: number;
+  path: string;
+  duration: number;
+  delay: number;
+  gradientId: string;
 };
 
-const phaseDurations = [2, 2.8, 2.2, 1.8];
+function randomValue(seed: number) {
+  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return value - Math.floor(value);
+}
 
-export default function HomeHero() {
-  const heroRef = useRef<HTMLElement>(null);
-  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
-  const mainCanvasRef = useRef<HTMLCanvasElement>(null);
+function HeroParticleLayer() {
+  const layerRef = useRef<SVGSVGElement>(null);
+  const [particles, setParticles] = useState<LetterParticle[]>([]);
+  const [size, setSize] = useState({ width: 1440, height: 900 });
 
   useEffect(() => {
-    const hero = heroRef.current;
-    const bgCanvas = bgCanvasRef.current;
-    const mainCanvas = mainCanvasRef.current;
-    const bgContext = bgCanvas?.getContext("2d");
-    const mainContext = mainCanvas?.getContext("2d");
+    const svg = layerRef.current;
+    if (!svg) return;
+    const hero = svg.closest<HTMLElement>("#hero");
+    if (!hero) return;
+    const heroElement: HTMLElement = hero;
 
-    if (!hero || !bgCanvas || !mainCanvas || !bgContext || !mainContext) {
-      console.error("No se pudo inicializar el canvas del hero.");
-      return;
-    }
-
-    const heroElement = hero!;
-    const backgroundCanvas = bgCanvas!;
-    const titleCanvas = mainCanvas!;
-    const backgroundContext = bgContext!;
-    const titleContext = mainContext!;
-
-    let bgWidth = 0;
-    let bgHeight = 0;
-    let width = 0;
-    let height = 0;
-    let targets: Point[] = [];
-    let particles: Particle[] = [];
-    let phase = 0;
-    let elapsed = 0;
-    let lastTime = 0;
-    let frameId = 0;
     let active = true;
+    let frameId = 0;
 
-    const backgroundParticles = Array.from({ length: 30 }, () => ({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      radius: Math.random() * 2.5 + 0.5,
-      velocity: 0.08 + Math.random() * 0.18,
-      opacity: 0.15 + Math.random() * 0.35,
-      color: Math.random() < 0.35 ? "255,140,66" : "173,109,47",
-    }));
-
-    function randomPosition(): Point {
-      return { x: Math.random() * width, y: Math.random() * height };
-    }
-
-    function gradientColor(x: number): [number, number, number] {
-      const percentage = width > 0 ? x / width : 0;
-      if (percentage < 0.15) return [244, 244, 244];
-      if (percentage < 0.55) {
-        const amount = (percentage - 0.15) / 0.4;
-        return [
-          Math.round(244 + (255 - 244) * amount),
-          Math.round(244 + (140 - 244) * amount),
-          Math.round(244 + (66 - 244) * amount),
-        ];
-      }
-
-      const amount = (percentage - 0.55) / 0.45;
-      return [
-        Math.round(255 + (173 - 255) * amount),
-        Math.round(140 + (109 - 140) * amount),
-        Math.round(66 + (47 - 66) * amount),
-      ];
-    }
-
-    function buildTargets() {
-      const offscreenCanvas = document.createElement("canvas");
-      offscreenCanvas.width = width;
-      offscreenCanvas.height = height;
-      const offscreenContext = offscreenCanvas.getContext("2d");
-      if (!offscreenContext) {
-        console.error("No se pudo crear el canvas auxiliar del hero.");
-        return;
-      }
-
-      const fontSize = Math.min(width * 0.19, 120);
-      offscreenContext.font = `800 ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
-      offscreenContext.textAlign = "center";
-      offscreenContext.textBaseline = "middle";
-      offscreenContext.fillStyle = "#fff";
-      const lineHeight = fontSize * 1.05;
-      offscreenContext.fillText("DANZA", width / 2, height * 0.38 - lineHeight * 0.5);
-      offscreenContext.fillText("LAB", width / 2, height * 0.38 + lineHeight * 0.5);
-
-      const imageData = offscreenContext.getImageData(0, 0, width, height).data;
-      targets = [];
-      const step = Math.max(3, Math.floor(width / 160));
-      for (let y = 0; y < height; y += step) {
-        for (let x = 0; x < width; x += step) {
-          if (imageData[(y * width + x) * 4 + 3] > 100) {
-            targets.push({ x, y });
-          }
-        }
-      }
-
-      const count = Math.min(targets.length, 2200);
-      particles = Array.from({ length: count }, (_, index) => {
-        const target = targets[index % targets.length];
-        const start = randomPosition();
-        return {
-          ...start,
-          tx: target.x,
-          ty: target.y,
-          r: Math.random() * 1.4 + 0.4,
-          rgb: gradientColor(target.x),
-          ex: null,
-          ey: null,
-          phaseOffset: Math.random() * Math.PI * 2,
-          wiggle: Math.random() * 0.6 + 0.2,
-        };
-      });
-      phase = 0;
-      elapsed = 0;
-    }
-
-    function resize() {
-      const bounds = heroElement.getBoundingClientRect();
-      width = Math.floor(bounds.width);
-      height = Math.floor(bounds.height);
-      if (width <= 0 || height <= 0) return;
-
-      bgWidth = backgroundCanvas.width = width;
-      bgHeight = backgroundCanvas.height = height;
-      titleCanvas.width = width;
-      titleCanvas.height = height;
-      buildTargets();
-    }
-
-    function easeInOut(value: number) {
-      return value < 0.5 ? 2 * value * value : -1 + (4 - 2 * value) * value;
-    }
-
-    function drawBackground() {
-      backgroundContext.clearRect(0, 0, bgWidth, bgHeight);
-      backgroundParticles.forEach((particle) => {
-        particle.y -= particle.velocity * 0.06;
-        if (particle.y < -2) particle.y = 102;
-        backgroundContext.beginPath();
-        backgroundContext.arc(
-          (particle.x * bgWidth) / 100,
-          (particle.y * bgHeight) / 100,
-          particle.radius,
-          0,
-          Math.PI * 2,
-        );
-        backgroundContext.fillStyle = `rgba(${particle.color},${particle.opacity})`;
-        backgroundContext.fill();
-      });
-    }
-
-    function animate(timestamp: number) {
-      const delta = Math.min((timestamp - lastTime) / 1000, 0.05);
-      lastTime = timestamp;
-      elapsed += delta;
-
-      drawBackground();
-      titleContext.clearRect(0, 0, width, height);
-      particles.forEach((particle) => {
-        let opacity = 1;
-
-        if (phase === 0) {
-          particle.x += Math.sin(timestamp * 0.0005 + particle.phaseOffset) * 0.4;
-          particle.y += Math.cos(timestamp * 0.0004 + particle.phaseOffset * 1.3) * 0.4;
-          if (particle.x < 0) particle.x = width;
-          if (particle.x > width) particle.x = 0;
-          if (particle.y < 0) particle.y = height;
-          if (particle.y > height) particle.y = 0;
-          opacity = 0.2 + Math.sin(timestamp * 0.001 + particle.phaseOffset) * 0.1;
-        } else if (phase === 1) {
-          const progress = easeInOut(Math.min(elapsed / phaseDurations[1], 1));
-          const wobble = (1 - progress) * 5;
-          particle.x +=
-            (particle.tx - particle.x) * (0.04 + progress * 0.04) +
-            Math.sin(timestamp * 0.002 + particle.phaseOffset) * wobble * 0.1;
-          particle.y +=
-            (particle.ty - particle.y) * (0.04 + progress * 0.04) +
-            Math.cos(timestamp * 0.002 + particle.phaseOffset) * wobble * 0.1;
-          opacity = 0.25 + progress * 0.7;
-        } else if (phase === 2) {
-          particle.x =
-            particle.tx + Math.sin(timestamp * 0.0015 + particle.phaseOffset) * 1.2 * particle.wiggle;
-          particle.y =
-            particle.ty + Math.cos(timestamp * 0.0012 + particle.phaseOffset) * particle.wiggle;
-          opacity = 0.85 + Math.sin(timestamp * 0.0018 + particle.phaseOffset) * 0.1;
-        } else {
-          if (particle.ex === null || particle.ey === null) {
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 150 + Math.random() * Math.max(width, height) * 0.5;
-            particle.ex = particle.tx + Math.cos(angle) * distance;
-            particle.ey = particle.ty + Math.sin(angle) * distance;
-          }
-          const progress = Math.pow(Math.min(elapsed / phaseDurations[3], 1), 3);
-          particle.x = particle.tx + (particle.ex - particle.tx) * progress;
-          particle.y = particle.ty + (particle.ey - particle.ty) * progress;
-          opacity = (1 - progress) * 0.85;
-        }
-
-        const [red, green, blue] = particle.rgb;
-        titleContext.beginPath();
-        titleContext.arc(particle.x, particle.y, particle.r, 0, Math.PI * 2);
-        titleContext.fillStyle = `rgba(${red},${green},${blue},${opacity})`;
-        titleContext.fill();
-      });
-
-      if (elapsed >= phaseDurations[phase]) {
-        elapsed = 0;
-        if (phase === 3 && targets.length > 0) {
-          particles.forEach((particle) => {
-            const start = randomPosition();
-            const target = targets[Math.floor(Math.random() * targets.length)];
-            particle.x = start.x;
-            particle.y = start.y;
-            particle.tx = target.x;
-            particle.ty = target.y;
-            particle.rgb = gradientColor(target.x);
-            particle.ex = null;
-            particle.ey = null;
-          });
-        }
-        phase = (phase + 1) % phaseDurations.length;
-      }
-
-      if (active) frameId = requestAnimationFrame(animate);
-    }
-
-    function startAnimation() {
+    function buildParticles() {
       if (!active) return;
-      resize();
-      if (targets.length === 0) {
-        console.error("No se encontraron partículas para formar el título del hero.");
+      const heroBounds = heroElement.getBoundingClientRect();
+      const width = Math.max(1, heroBounds.width);
+      const height = Math.max(1, heroBounds.height);
+      const nextParticles: LetterParticle[] = [];
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+
+      if (!context) {
+        console.error("No se pudo preparar el muestreo tipográfico de las partículas del hero.");
         return;
       }
-      frameId = requestAnimationFrame((timestamp) => {
-        lastTime = timestamp;
-        animate(timestamp);
+
+      heroElement.querySelectorAll<HTMLElement>(".hero-word-text").forEach((word, wordIndex) => {
+        const bounds = word.getBoundingClientRect();
+        const style = getComputedStyle(word);
+        canvas.width = Math.max(1, Math.ceil(bounds.width));
+        canvas.height = Math.max(1, Math.ceil(bounds.height));
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillStyle = "#fff";
+        context.fillText(word.textContent ?? "", canvas.width / 2, canvas.height / 2);
+
+        const image = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const step = 5;
+        const gradientId = wordIndex === 0 ? "danza-particle-gradient" : "lab-particle-gradient";
+        let particleIndex = 0;
+
+        for (let y = 1; y < canvas.height - 1; y += step) {
+          for (let x = 1; x < canvas.width - 1; x += step) {
+            if (image[(y * canvas.width + x) * 4 + 3] < 180) continue;
+
+            const seed = particleIndex + wordIndex * 10000;
+            const startX = bounds.left - heroBounds.left + x;
+            const startY = bounds.top - heroBounds.top + y;
+            const targetX = randomValue(seed + 1) * width;
+            const targetY = randomValue(seed + 2) * height;
+            const deltaX = targetX - startX;
+            const deltaY = targetY - startY;
+            const swayX = (randomValue(seed + 3) - 0.5) * width * 0.65;
+            const swayY = (randomValue(seed + 4) - 0.5) * height * 0.65;
+            const path = [
+              "M 0 0",
+              `C ${deltaX * 0.22 + swayX} ${deltaY * 0.18 - swayY}`,
+              `${deltaX * 0.78 - swayX} ${deltaY * 0.82 + swayY}`,
+              `${deltaX} ${deltaY}`,
+              `C ${deltaX * 0.76 + swayX} ${deltaY * 0.82 - swayY}`,
+              `${deltaX * 0.2 - swayX} ${deltaY * 0.2 + swayY}`,
+              "0 0",
+            ].join(" ");
+            const duration = 16;
+
+            nextParticles.push({
+              key: `${wordIndex}-${particleIndex}`,
+              x: startX,
+              y: startY,
+              radius: 0.7 + randomValue(seed + 6) * 1.7,
+              path,
+              duration,
+              delay: 0,
+              gradientId,
+            });
+            particleIndex += 1;
+          }
+        }
       });
+
+      setSize({ width, height });
+      setParticles(nextParticles);
     }
 
-    const observer = new ResizeObserver(resize);
-    observer.observe(heroElement);
-    window.addEventListener("resize", resize);
+    function scheduleBuild() {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(buildParticles);
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleBuild);
+    resizeObserver.observe(heroElement);
+    document.fonts.ready.then(scheduleBuild);
+    scheduleBuild();
+
+    return () => {
+      active = false;
+      cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  return (
+    <svg
+      ref={layerRef}
+      className="hero-burst-particles"
+      viewBox={`0 0 ${size.width} ${size.height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="danza-particle-gradient" gradientUnits="userSpaceOnUse" x1="0" x2={size.width}>
+          <stop offset="0%" stopColor="#fffaf6" />
+          <stop offset="22%" stopColor="#ffe1cf" />
+          <stop offset="48%" stopColor="#ffb27f" />
+          <stop offset="74%" stopColor="#ff8c42" />
+          <stop offset="100%" stopColor="#e96b28" />
+        </linearGradient>
+        <linearGradient id="lab-particle-gradient" gradientUnits="userSpaceOnUse" x1="0" x2={size.width}>
+          <stop offset="0%" stopColor="#ffc49d" />
+          <stop offset="25%" stopColor="#ffad7a" />
+          <stop offset="52%" stopColor="#ff914e" />
+          <stop offset="76%" stopColor="#e97830" />
+          <stop offset="100%" stopColor="#c95624" />
+        </linearGradient>
+      </defs>
+      {particles.map((particle) => (
+        <circle
+          key={particle.key}
+          cx={particle.x}
+          cy={particle.y}
+          r={particle.radius}
+          fill={`url(#${particle.gradientId})`}
+        >
+          <animateMotion
+            path={particle.path}
+            dur={`${particle.duration}s`}
+            begin={`${particle.delay}s`}
+            keyPoints="0;0;0.5;1;1"
+            keyTimes="0;0.18;0.5;0.82;1"
+            keySplines="0.35 0 0.65 1;0.35 0 0.65 1;0.35 0 0.65 1;0.35 0 0.65 1"
+            calcMode="spline"
+            repeatCount="indefinite"
+          />
+          <animate
+            attributeName="opacity"
+            values="1;1;0.12;1;1"
+            keyTimes="0;0.18;0.5;0.82;1"
+            dur={`${particle.duration}s`}
+            begin={`${particle.delay}s`}
+            repeatCount="indefinite"
+          />
+        </circle>
+      ))}
+    </svg>
+  );
+}
+
+function ParticleWord({ label }: { label: string }) {
+  return (
+    <span className={`hero-word hero-word--${label.toLowerCase()}`}>
+      <span className="hero-word-text" aria-hidden="true">{label}</span>
+    </span>
+  );
+}
+
+export default function HomeHero() {
+  useEffect(() => {
     const nav = document.querySelector(".site-nav");
     const updateNav = () => nav?.classList.toggle("solid", window.scrollY > 60);
     window.addEventListener("scroll", updateNav);
@@ -277,6 +254,7 @@ export default function HomeHero() {
       },
       { threshold: 0.08 },
     );
+
     ["#manifiesto", "#atto"].forEach((selector) => {
       const element = document.querySelector(selector);
       if (element instanceof HTMLElement) {
@@ -286,36 +264,95 @@ export default function HomeHero() {
       }
     });
 
-    resize();
-    document.fonts.ready.then(startAnimation);
-
     return () => {
-      active = false;
-      cancelAnimationFrame(frameId);
-      observer.disconnect();
       sectionObserver.disconnect();
-      window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", updateNav);
       nav?.classList.remove("solid");
     };
   }, []);
 
   return (
-    <section id="hero" ref={heroRef}>
-      <div className="hero-bg" />
-      <canvas
-        id="bgCanvas"
-        ref={bgCanvasRef}
+    <section id="hero">
+      <div className="hero-bg" aria-hidden="true" />
+      <svg
+        className="hero-particles"
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="none"
         aria-hidden="true"
-      />
-      <canvas
-        id="mainCanvas"
-        ref={mainCanvasRef}
-        role="img"
-        aria-label="Danza Lab"
-      />
+      >
+        <g className="hero-particle-field">
+          {[0, 60].map((offset) => (
+            <g key={offset} transform={`translate(0 ${offset})`}>
+              {ambientParticles.map((particle) => (
+                <circle
+                  key={`${particle.x}-${particle.y}`}
+                  cx={particle.x}
+                  cy={particle.y}
+                  r={particle.radius}
+                />
+              ))}
+            </g>
+          ))}
+        </g>
+        <g className="hero-particle-field hero-particle-field--second">
+          {[0, 60].map((offset) => (
+            <g key={offset} transform={`translate(0 ${offset})`}>
+              {secondaryAmbientParticles.map((particle) => (
+                <circle
+                  key={`${particle.x}-${particle.y}`}
+                  cx={particle.x}
+                  cy={particle.y}
+                  r={particle.radius}
+                />
+              ))}
+            </g>
+          ))}
+        </g>
+        <g className="hero-crossing-particles">
+          {crossingParticles.map((particle) => (
+            <circle
+              key={particle.index}
+              cx={particle.startX}
+              cy={particle.startY}
+              r={particle.index % 3 === 0 ? 1.5 : 1.25}
+            >
+              <animate
+                attributeName="cx"
+                values={`${particle.startX};720;${particle.endX}`}
+                keyTimes="0;0.52;1"
+                dur={`${particle.duration}s`}
+                begin={`${particle.delay}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="cy"
+                values={`${particle.startY};${particle.centerY};${particle.endY}`}
+                keyTimes="0;0.52;1"
+                dur={`${particle.duration}s`}
+                begin={`${particle.delay}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;0.9;0"
+                keyTimes="0;0.18;1"
+                dur={`${particle.duration}s`}
+                begin={`${particle.delay}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
+          ))}
+        </g>
+      </svg>
 
-      <div className="hero-sub">Explorar · Entrenar · Crear</div>
+      <h1 className="hero-title" aria-label="Danza Lab">
+        <ParticleWord label="DANZA" />
+        <span className="hero-sub" aria-hidden="true">
+          Explorar · Entrenar · Crear
+        </span>
+        <ParticleWord label="LAB" />
+      </h1>
+      <HeroParticleLayer />
 
       <div className="hero-content">
         <p className="hero-desc">

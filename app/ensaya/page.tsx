@@ -209,19 +209,25 @@ export default function EnsayaPage() {
   const [galleryPreviewUrls, setGalleryPreviewUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!publishForm.imageFile) {
-      setImagePreviewUrl(null);
-      return;
-    }
+    const previewUrl = publishForm.imageFile
+      ? URL.createObjectURL(publishForm.imageFile)
+      : null;
+    let active = true;
 
-    const previewUrl = URL.createObjectURL(publishForm.imageFile);
-    setImagePreviewUrl(previewUrl);
-    return () => URL.revokeObjectURL(previewUrl);
+    queueMicrotask(() => {
+      if (active) setImagePreviewUrl(previewUrl);
+    });
+
+    return () => {
+      active = false;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
   }, [publishForm.imageFile]);
 
   useEffect(() => {
     const createdUrls: string[] = [];
     const previews: Record<string, string> = {};
+    let active = true;
 
     publishForm.extraPhotos.forEach((photo) => {
       if (!photo.file) return;
@@ -230,9 +236,12 @@ export default function EnsayaPage() {
       previews[photo.id] = objectUrl;
     });
 
-    setGalleryPreviewUrls(previews);
+    queueMicrotask(() => {
+      if (active) setGalleryPreviewUrls(previews);
+    });
 
     return () => {
+      active = false;
       createdUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [publishForm.extraPhotos]);

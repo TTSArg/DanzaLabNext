@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 type Profile = {
@@ -79,7 +80,9 @@ function normalizeRole(value: unknown): "admin" | "cliente" | null {
   return null;
 }
 
-function formatSupabaseError(error: any) {
+function formatSupabaseError(
+  error: { message?: string; details?: string; hint?: string; code?: string } | null,
+) {
   if (!error) return "Error desconocido";
   return [error.message, error.details, error.hint, error.code].filter(Boolean).join(" · ");
 }
@@ -99,7 +102,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [spaces, setSpaces] = useState<Array<{ id: number; nombre: string; barrio: string | null; tipo: string | null; capacidad: number | null }>>([]);
@@ -107,7 +110,7 @@ export default function AdminPage() {
   const [pressedAction, setPressedAction] = useState<Record<number, "approve" | "reject">>({});
   const [error, setError] = useState<string | null>(null);
 
-  async function loadProfile(userId: string | undefined) {
+  const loadProfile = useCallback(async (userId: string | undefined) => {
     if (!userId) {
       setProfile(null);
       return;
@@ -146,9 +149,9 @@ export default function AdminPage() {
       console.error("loadProfile failed", error);
       setProfile({ role: "cliente" });
     }
-  }
+  }, []);
 
-  async function loadPendingRequests() {
+  const loadPendingRequests = useCallback(async () => {
     const { data, error: requestsError } = await supabase
       .from("espacios_solicitudes")
       .select("id, nombre_espacio, barrio, whatsapp, estado, tipo_servicio, capacidad, precio_desde, disciplinas, caracteristicas, imagen_url, fotos_adicionales, email, created_at")
@@ -162,7 +165,7 @@ export default function AdminPage() {
 
     const result = (data ?? []) as PendingRequest[];
     setRequests(result);
-  }
+  }, []);
 
   async function removeActiveSpaces() {
     if (!spaces.length) return;
@@ -183,7 +186,7 @@ export default function AdminPage() {
     setError(null);
   }
 
-  async function loadActiveSpaces() {
+  const loadActiveSpaces = useCallback(async () => {
     const { data, error } = await supabase
       .from("salas")
       .select("*")
@@ -208,9 +211,9 @@ export default function AdminPage() {
         capacidad: item.capacidad ?? 0,
       }))
     );
-  }
+  }, []);
 
-  async function refreshAccess() {
+  const refreshAccess = useCallback(async () => {
     const { data: sessionData } = await supabase.auth.getSession();
     const currentSession = sessionData.session;
     setSession(currentSession);
@@ -223,10 +226,10 @@ export default function AdminPage() {
 
     await loadProfile(currentSession.user.id);
     setLoading(false);
-  }
+  }, [loadProfile]);
 
   useEffect(() => {
-    refreshAccess();
+    void Promise.resolve().then(refreshAccess);
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
@@ -242,14 +245,15 @@ export default function AdminPage() {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [loadProfile, refreshAccess]);
 
   useEffect(() => {
-    if (profile?.role === "admin") {
-      loadPendingRequests();
-      loadActiveSpaces();
-    }
-  }, [profile]);
+    void Promise.resolve().then(() => {
+      if (profile?.role === "admin") {
+        return Promise.all([loadPendingRequests(), loadActiveSpaces()]);
+      }
+    });
+  }, [loadActiveSpaces, loadPendingRequests, profile]);
 
   async function handleSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
