@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HomeHero from "./components/home-hero";
 
 export default function Home() {
   const organizationSchema = {
@@ -26,42 +27,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
 
-      <section className="hero">
-        <div className="hero-content">
-          <h1>
-            Danza
-            <br />
-            <span className="accent">Lab</span>
-          </h1>
-          <div className="hero-sub">Explorar · Entrenar · Crear</div>
-
-          <p className="hero-desc">
-            <span className="accent">Investigamos el cuerpo en movimiento</span>, donde lo genuino se
-            nutre de técnica para amplificar la capacidad de improvisación en tango.
-          </p>
-          <p className="hero-desc">
-            <span className="accent">Abordamos la danza como pulsión de lo vivo</span>, una constante
-            transformación de tejidos que nos componen y aguardan a ser descubiertos.
-          </p>
-          <p className="hero-desc">
-            <span className="accent">Te invitamos a entrenar</span> para descubrir quién estás siendo
-            en tu expresión genuina, incorporar tus hallazgos y disfrutarlos luego en la milonga.
-            También podrías llevarlos a un escenario, a través de una puesta en escena.
-          </p>
-
-          <div className="hero-actions">
-            <p className="hero-actions-label">Conocé nuestras propuestas</p>
-            <div className="button-row">
-              <Link className="btn hero-cta" href="/laboratorios">
-                Laboratorios
-              </Link>
-              <Link className="btn-outline hero-cta" href="/composicion-escenica">
-                Composición escénica
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeHero />
 
       <section className="inner brief-home">
         <div className="brief-profile">
