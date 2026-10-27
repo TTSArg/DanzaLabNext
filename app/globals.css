@@ -93,12 +93,18 @@ p { color: #aaa; }
 .whatsapp-float:hover { transform: translateY(-2px); }
 @media (max-width: 620px) { .brief-profile { grid-template-columns: 1fr; } .profile-circle { margin: 0 auto; } }
 @media (max-width: 620px) {
-  #hero { min-height: 820px; padding: 2rem 1.25rem; }
-  #hero .hero-title { top: 34%; font-size: clamp(3.5rem, 15vw, 8rem); }
+  .page { padding-top: 132px; }
+  .nav-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); overflow: hidden; }
+  .nav-tabs li { min-width: 0; grid-column: span 2; }
+  .nav-tabs li:nth-child(4) { grid-column: 2 / span 2; }
+  .nav-tabs li:nth-child(5) { grid-column: 4 / span 2; }
+  .nav-tabs a { padding: .45rem .2rem; font-size: .62rem; letter-spacing: .5px; text-align: center; white-space: normal; }
+  #hero { min-height: max(calc(100vh - 132px), 620px); min-height: max(calc(100svh - 132px), 620px); padding: 2rem 1.25rem; }
+  #hero .hero-title { top: 24%; font-size: clamp(3.5rem, 15vw, 8rem); }
   #hero .hero-title .hero-sub { letter-spacing: 4px; }
-  #hero .hero-content { top: 53%; }
-  #hero .hero-desc { font-size: .87rem; }
-  #hero .hero-desc2 { margin-bottom: 2rem; font-size: .82rem; }
+  #hero .hero-content { top: 38%; width: min(620px, calc(100% - 1.5rem)); }
+  #hero .hero-desc { font-size: .87rem; line-height: 1.7; }
+  #hero .hero-desc2 { margin-bottom: 1rem; font-size: .82rem; line-height: 1.7; }
   #hero .btn { padding: .8rem 1.2rem; font-size: .62rem; letter-spacing: 2px; }
 }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
