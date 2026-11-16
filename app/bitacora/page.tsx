@@ -1,4 +1,30 @@
 import Link from "next/link";
 import { PageIntro } from "../components/site";
+import BitacoraEntryCard from "./entry-card";
+import { bitacoraEntries } from "./entries";
+import BitacoraPublishedEntries from "./published-entries";
 
-export default function BitacoraPage() { return <main className="page"><div className="inner"><PageIntro label="Reflexiones · Investigación · Citas" title="Bitácora" description="Escritura en proceso. Pensamientos sobre la danza, el cuerpo, la improvisación y sus intersecciones con lo humano." /><div className="split"><article className="card"><div className="inner-label">Reflexión</div><h3>¿Por qué el tango necesita más ternura y menos pasos?</h3><p>El tango se enseña, se corrige, se evalúa. Pero antes de ser un baile fue un encuentro. Una exploración sobre cómo recuperar la dimensión humana de la danza técnica.</p><p>Danza Lab · 2025</p></article><div>{["El motor no es la figura, es la intención que la precede.", "Del rendimiento a la rendición: cómo la improvisación cambia la ecuación", "Maps to Ecstasy: Gabrielle Roth y la danza como mapa del alma"].map((item) => <article className="card" key={item}><div className="bit-tag">Investigación</div><h3>{item}</h3><p>Danza Lab · 2025</p></article>)}</div></div><div className="button-row"><Link className="btn-outline" href="/">Volver al inicio</Link></div></div></main>; }
+export default function BitacoraPage() {
+	return (
+		<main className="page">
+			<div className="inner">
+				<PageIntro
+					label="Reflexiones · Notas de clase"
+					title="Bitácora"
+					description="Pensamientos sobre la danza, el cuerpo, la improvisación y sus intersecciones con lo humano."
+				/>
+				<div className="bitacora-list">
+					<BitacoraPublishedEntries />
+					{bitacoraEntries.map((entry) => (
+						<BitacoraEntryCard key={entry.slug} entry={entry} />
+					))}
+				</div>
+				<div className="button-row">
+					<Link className="btn-outline" href="/">
+						Volver al inicio
+					</Link>
+				</div>
+			</div>
+		</main>
+	);
+}

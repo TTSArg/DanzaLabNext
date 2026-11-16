@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import BitacoraPostManager from "./bitacora-post-manager";
 
 type Profile = {
   role: "admin" | "cliente" | string;
@@ -428,6 +429,10 @@ export default function AdminPage() {
         </div>
 
         {error && <p className="admin-error">{error}</p>}
+
+        <div className="admin-panel admin-bitacora-panel">
+          <BitacoraPostManager />
+        </div>
 
         <div className="admin-grid">
           <div className="admin-panel">
