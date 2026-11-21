@@ -48,12 +48,6 @@ export function TableroNovedades() {
           <div className="divider" />
         </div>
         <div className="grid news-grid">
-          <Link className="card news-card news-card-link" href="/laboratorios">
-            <div className="nov-type">Laboratorio · Sábados 18 hs</div>
-            <h4>Impro Milonguera</h4>
-            <p>Estudio Dinzel · Sábados de octubre a marzo</p>
-            <p>Un laboratorio abierto de improvisación pensado para la milonga: investigar cómo salir del repertorio, escuchar, y encontrar movimiento nuevo en cada baile.</p>
-          </Link>
           <Link className="card news-card news-card-link" href="/laboratorios#acompanamiento-individual">
             <div className="nov-type">Acompañamiento individual</div>
             <h4>Turnos de lunes a viernes · 18 a 21 hs</h4>

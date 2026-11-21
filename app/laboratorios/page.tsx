@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { AcompanamientoAgenda } from "./acompanamiento-agenda";
-import { ImproFechas } from "./impro-fechas";
 import { PageIntro } from "../components/site";
 import { WHATSAPP_NUMBER, agenda, textosActividad } from "../../lib/agenda";
 
@@ -26,16 +24,21 @@ export default function LaboratoriosPage() {
 				/>
 
 				<section className="lab-group" aria-labelledby="lab-group-a">
-					<div className="lab-group-heading"><span>Catálogo A</span><h3 id="lab-group-a">Laboratorio Colectivo</h3><div className="divider" /></div>
+					<div className="lab-group-heading">
+						<span>Catálogo A</span>
+						<h3 id="lab-group-a">
+							Laboratorios de Impro en{" "}
+							<a
+								href="https://instagram.com/estudiodinzel.arg"
+								target="_blank"
+								rel="noreferrer"
+							>
+								@estudiodinzel.arg
+							</a>
+						</h3>
+						<div className="divider" />
+					</div>
 					<div className="grid">
-						<article className="card lab-card lab-card-featured">
-							<div className="lab-tag">LABORATORIOS DE</div>
-							<h3>IMPRO MILONGUERA</h3>
-							<p className="lab-slogan">Entrá a la pista y descubrí lo que todavía no bailaste.</p>
-							<p className="lab-schedule">Sábados 18hs · Estudio Dinzel</p>
-							<p>{textosActividad.improMilonguera}</p>
-							<ImproFechas />
-						</article>
 						<article className="card lab-card">
 							<div className="lab-tag">Grupal · El Motor</div>
 							<h3>Entrenamiento para la Improvisación</h3>
@@ -43,8 +46,8 @@ export default function LaboratoriosPage() {
 						</article>
 						<article className="card lab-card">
 							<div className="lab-tag">Grupal · La Pregunta</div>
-							<h3>Mecánicas y Dinámicas</h3>
-							<p>Transformamos barreras y curiosidades en caminos de exploración corporal. Aquí no se enseñan pasos, se descubren maneras.</p>
+							<h3>ME Di Te Tango</h3>
+							<p>Mecánicas, Dinámicas y Técnicas para ampliar el disfrute en tu baile a través de la improvisación.</p>
 						</article>
 					</div>
 				</section>
@@ -84,7 +87,6 @@ export default function LaboratoriosPage() {
 							<p>Una hora de entrenamiento en red donde la comunicación es exclusivamente cinética.</p>
 						</article>
 					</div>
-					<AcompanamientoAgenda />
 				</section>
 
 				<section className="lab-group" aria-labelledby="lab-group-d">
