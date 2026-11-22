@@ -31,7 +31,6 @@ export default function BitacoraComments({ slug }: { slug: string }) {
 			if (!isActive) return;
 			if (error) {
 				console.error("Bitacora comment loading error:", error);
-				setMessage("No se pudieron cargar los comentarios. Intenta de nuevo más tarde.");
 			} else {
 				setComments(data ?? []);
 			}
@@ -111,7 +110,7 @@ export default function BitacoraComments({ slug }: { slug: string }) {
 				{isLoading ? (
 					<p>Cargando comentarios...</p>
 				) : comments.length === 0 ? (
-					<p>Todavía no hay comentarios. Puedes iniciar la conversación.</p>
+					null
 				) : (
 					comments.map((comment) => (
 						<article className="bitacora-comment" key={comment.id}>
