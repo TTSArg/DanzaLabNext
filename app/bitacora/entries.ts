@@ -25,6 +25,36 @@ export type BitacoraEntry = {
 
 export const bitacoraEntries: BitacoraEntry[] = [
 	{
+		slug: "tomarse-el-tiempo",
+		category: "Notas de clase",
+		title: "Tomarse el tiempo",
+		intro: "Hoy experimentamos la oportunidad de preguntarnos “¿cómo se siente mi cuerpo físico?”: tomamos tiempo, o mejor, entramos en una actitud de calma, de silencio, de escucha.",
+		content: [
+			{ type: "paragraph", text: "De allí emergieron sentires, emociones, proyecciones, deseos, por ejemplo, de bailar, disfrutar, relajar." },
+			{ type: "paragraph", text: "Al lector: ¿cómo se siente estar acá? ¿Cómo se siente tu cuerpo físico, donde sea que estés ahora? Tomate el tiempo, el respiro... Si te permitiste esa pausa en calma, lo que aflore es bienvenido, como venga, como aparezca." },
+			{ type: "paragraph", text: "¿Quién más que la escucha puede guiarnos al descubrimiento de quienes estamos siendo? El gran desafío, pienso, es no apresurarte al análisis, a la interpretación ni a querer darle un sentido. Quedate fielmente en eso que aparece, cualquiera que sea la manera de estar, recibila. Para improvisar, me resulta necesario, prioritario, quedarme en los tonos, las posturas, las respiraciones, las apneas que naturalmente están ocurriendo. Creo que solo allí, en esa demora, empieza el camino de aquello que genuinamente puedas expresar a través de la danza, a través del tango, que es quien nos convoca." },
+			{ type: "heading", text: "Acá estoy" },
+			{ type: "paragraph", text: "De manera concatenada, por consecuencia de la escucha, aparecés, aparecés en este espacio. Fijate en las texturas, temperaturas, durezas, blanduras, tensiones, nerviosismos y todas aquellas \"sensualidades\"* que te componen hoy, acá, ahora mismo." },
+			{ type: "paragraph", text: "Tomar tiempo y espacio, para luego poner en palabras esta experiencia, fue la puerta a través de la cual entramos en la experiencia de danza: este cuerpo, mi cuerpo, siente y está." },
+			{ type: "paragraph", text: "* Los Maestros Rodolfo y Gloria Dinzel se refieren a la capacidad perceptiva que se despierta en la práctica del tango danza a través de los sentidos; la sensualidad tiene que ver con los sentidos." },
+			{ type: "heading", text: "El Cuerpo" },
+			{ type: "paragraph", text: "Recuerdo algunas de las palabras que aparecían: rígido, flexible, disponible, pesada, neutro, blando, relajado, enojado, emocionada, presente. Acá hay una capa más de esta exploración: si te das cuenta, se entremezclan estados físicos, estados anímicos y percepciones más subjetivas como \"estar presente\". Esto me lleva a preguntar: ¿con qué capa de tu cuerpo estás más conectadx hoy? Podés acercarte a una característica de lo físico, a un estado emocional, a un estado mental o a una interpretación de lo que percibís." },
+			{ type: "paragraph", text: "Lo anterior deja en evidencia la diversidad de capas en las que se puede explorar el cuerpo. Mi recomendación para bailar tango: buscá siempre tu cuerpo físico, observá los estados de rigidez, blandura, flexibilidad, dureza, pesadez, y localizalos; no todo tu cuerpo tiene las mismas características. Luego permití que tu cuerpo físico entre en diálogo-danza con otro cuerpo a través del abrazo, tal cual estás y con lo que percibís. Presentarte de este modo abre la oportunidad para la transformación de las otras capitas que te componen." },
+			{ type: "heading", text: "La sinceridad" },
+			{ type: "paragraph", text: "Darte el permiso de tomar tiempo y espacio para estar en constante percepción de tu cuerpo físico es el punto de partida que proponemos. Cuando sientas que estás haciendo siempre lo mismo, cuando sientas que cometiste un \"error\", cuando sientas que no te sale, cuando te abrume lo externo... tomá tiempo y espacio para percibir tu cuerpo físico, respirá y volvé a comenzar." },
+			{ type: "paragraph", text: "Sin prisa, la aventura creativa aparece por sí sola y te va a pedir estar completo y completa en todos tus cuerpos, jugando al unísono, sin dejar de sorprenderte. En este estadio del entrenamiento, la improvisación te va abriendo de a poco, a medida que lo permitas, el vacío y el silencio para lo creativo, para lo genuino que hay naturalmente en un cuerpo escuchado." },
+			{ type: "signature", text: "Atto" },
+		],
+		media: [
+			{
+				type: "image",
+				src: "/bitacora/tomarse-el-tiempo-01.jpeg",
+				alt: "Participantes y docentes de la clase Me Di Te Tango reunidos para una fotografía.",
+				caption: "Clase grupal Me Di Te Tango (Mecánicas, Dinámicas y Técnicas para disfrutar tu tango), en el @estudiodinzel.arg. Docentes @AdrianaBa y @Atto_numpaque.",
+			},
+		],
+	},
+	{
 		slug: "tango-necesita-ternura",
 		category: "Reflexión",
 		title: "¿Por qué el tango necesita más ternura?",
