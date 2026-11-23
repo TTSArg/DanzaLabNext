@@ -52,7 +52,7 @@ export const textosActividad = {
   paisajesNoviembre:
     "Paisajes vuelve en formato intensivo. Durante un fin de semana vamos a partir de un estímulo (una imagen, un recuerdo, una textura) y a atenderlo sin juicio hasta que empiece a pedir movimiento. Después, en el camino del hecho humano al hecho artístico, lo vamos a ir acotando: qué entra, qué queda afuera, cómo se enlaza. El resultado es un lenguaje propio que se comparte frente a otras personas que están haciendo la misma búsqueda. No hace falta experiencia previa.",
   ternuraYContacto:
-    "Un encuentro de 3 horas centrado en la polaridad y lo sensoperceptivo. El foco está en el poder del contacto profundo en el tango improvisado, no en la terminología técnica.",
+    "Un laboratorio intensivo de 3 horas para explorar técnicas de relajación, autoobservación y tonos corporales al servicio del tango danza y de nuevas oportunidades para improvisar desde la integración del cuerpo, la emoción y la mente.",
   fraseFlyerPaisajes:
     "Entrá a la escena con lo que tenés y encontrá cómo decirlo con el cuerpo.",
 } as const;
@@ -83,7 +83,7 @@ export const novedadesDinamicas: Array<{
     ...actividad,
     inicio: actividad.fecha,
     fin: actividad.fecha,
-    titulo: "Ternura y Contacto — viernes de noche",
+    titulo: "Ternura — viernes de noche",
     enfoque: textosActividad.ternuraYContacto,
     flyer: "",
     destino: "/laboratorios",
